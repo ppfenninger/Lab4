@@ -1,5 +1,6 @@
+`timescale 1 ns / 1 ps
 module forwarding (
-	input targetReg,
+	input[4:0] targetReg,
 	input[31:0] targetData,
 	input[4:0] MEM_reg,
 	input[31:0] MEM_data,
