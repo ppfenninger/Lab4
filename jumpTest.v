@@ -1,6 +1,7 @@
 module jumpTest (
-	input instruction,
-	output jumpAddress,
+	input[31:0] instruction,
+	input[31:0] programCounter,
+	output[31:0] jumpAddress,
 	output doesJump
 );
 
