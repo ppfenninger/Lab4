@@ -19,15 +19,16 @@ module noOp(
 	input[31:0] initiaInstruction,
 	input ID_NoOp,
 	input ID_PreNoOp,
-	output[31:0] instr,
-	output IF_NoOp,
-	output IF_PreNoOp
+	output reg[31:0] instr,
+	output reg IF_NoOp,
+	output reg IF_PreNoOp
 );
 
-reg isJR, isOtherBranch;
+reg isJR;
+reg isOtherBranch;
 wire[31:0] noOPInstr;
-wire[5:0] opcode;
-wire[5:0] funct;
+reg[5:0] opcode;
+reg[5:0] funct;
 wire ID_NoOpInv;
 wire ID_PreNoOpInv;
 wire beginJRProcess;
@@ -37,10 +38,11 @@ assign noOPInstr = 32'b00100000000000000000000000000000;
 not(ID_NoOpInv, ID_NoOp);
 not(ID_PreNoOpInv, ID_PreNoOp);
 
+and(beginJRProcess, isJR, ID_PreNoOpInv, ID_NoOpInv);
 
-always @(instruction) begin
-	opcode = instruction[31:26];
-	funct = instruction[5:0];
+always @(initiaInstruction) begin
+	opcode = initiaInstruction[31:26];
+	funct = initiaInstruction[5:0];
 	case (opcode)
 		`LW_OP:   begin isJR=0; isOtherBranch=1; end
 		`SW_OP:   begin isJR=0; isOtherBranch=0; end //SW
@@ -62,8 +64,6 @@ always @(instruction) begin
 		end
 		default: $display("Error in No-Op: Invalid opcode. OPCODE: %b", opcode);
 	endcase
-
-	and(beginJRProcess, isJR, ID_PreNoOpInv, ID_NoOpInv);
 
 	if(beginJRProcess) begin instr = noOPInstr; IF_PreNoOp = 1; IF_NoOp = 0; end
 	else if(ID_PreNoOp) begin instr = initiaInstruction; IF_PreNoOp = 0; IF_NoOp = 1; end
