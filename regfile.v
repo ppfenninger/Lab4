@@ -135,7 +135,7 @@ input      [31:0] d,
 input       wrenable,
 input       clk
 );
-	always @(posedge clk) begin
+	always @(negedge clk) begin
 		if(wrenable) begin
 			q[31:0] <= d[31:0];
 		end // if(wrenable)
@@ -150,7 +150,7 @@ input       wrenable,
 input       clk
 );
 integer i;
-	always @(posedge clk) begin
+	always @(negedge clk) begin
 		q[31:0] <= 32'h00000000;
 	end // always @(posedge clk)
 endmodule
