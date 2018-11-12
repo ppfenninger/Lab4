@@ -8,16 +8,10 @@
 `define ADDI_OP  6'b001000
 `define RTYPE_OP 6'b000000
 
-`define JR_FUNCT  6'b001000
-`define ADD_FUNCT 6'b100000
-`define SUB_FUNCT 6'b100010
-`define SLT_FUNCT 6'b101010
-
 `timescale 1 ns / 1 ps
 
 module branchTest (
 	input[5:0] opcode,
-	input[5:0] funct,
 	input[31:0] Da,
 	input[31:0] Db,
 	input[31:0] initialBranchAddress,
@@ -33,12 +27,12 @@ wire doesBranchFinalInv;
 wire isBNEFinal;
 wire isBEQFinal;
 
-and(isBNEFinal, isBNE, doesBranchFinalInv);
-and(isBEQFinal, isBEQ, doesBranchFinal);
+and(isBNEFinal, isBNE, doesBranchFinal);
+and(isBEQFinal, isBEQ, doesBranchFinalInv);
 
 wire goToBranch;
 
-always @(opcode or funct) begin
+always @(opcode) begin
 	case (opcode)
 		`LW_OP:   begin isBNE=0; isBEQ=0; end
 		`SW_OP:   begin isBNE=0; isBEQ=0; end //SW
@@ -49,15 +43,7 @@ always @(opcode or funct) begin
 		`XORI_OP: begin isBNE=0; isBEQ=0; end //XORI
 		`ADDI_OP: begin isBNE=0; isBEQ=0; end //ADDI
 
-		`RTYPE_OP: begin
-			case (funct)
-				`JR_FUNCT: begin isBNE=0; isBEQ=0; end //JR
-				`ADD_FUNCT: begin isBNE=0; isBEQ=0; end //ADD
-				`SUB_FUNCT: begin isBNE=0; isBEQ=0; end //SUB //actually is subtract
-				`SLT_FUNCT: begin isBNE=0; isBEQ=0; end//SLT //actually is subtract
-				default: $display("Error in Branch Test: Invalid funct");
-			endcase
-		end
+		`RTYPE_OP: begin isBNE=0; isBEQ=0; end
 		default: $display("Error in Branch Test: Invalid opcode. OPCODE: %b", opcode);
 	endcase
 end
