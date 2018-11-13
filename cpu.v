@@ -119,17 +119,27 @@ assign ID_rt = ID_instr[20:16];
 assign ID_opcode = ID_instr[31:26];
 assign ID_funct  = ID_instr[5:0];
 
-wire[31:0] ID_Rrs, ID_Rrt, ID_JRAddr;
+wire[31:0] ID_Rrs, ID_Rrt, ID_forwardedRrt, ID_forwardedRrs;
 reg[4:0] MEM_regAddr, WB_regAddr;
 reg[31:0] MEM_regDat, WB_regDat;
-forwarding ID_forwarding(
+forwarding ID_RrsForwarding(
 	.targetReg(ID_rs),
 	.targetData(ID_Rrs),
 	.MEM_reg(MEM_regAddr),
 	.MEM_data(MEM_regDat),
 	.WB_reg(WB_regAddr),
 	.WB_data(WB_regDat),
-	.data(ID_JRAddr)
+	.data(ID_forwardedRrs)
+);
+
+forwarding ID_RrtForwarding(
+	.targetReg(ID_rt),
+	.targetData(ID_Rrt),
+	.MEM_reg(MEM_regAddr),
+	.MEM_data(MEM_regDat),
+	.WB_reg(WB_regAddr),
+	.WB_data(WB_regDat),
+	.data(ID_forwardedRrt)
 );
 
 wire[31:0] ID_initialBranchAddr, ID_branchAddr;
@@ -143,17 +153,19 @@ Adder ID_branchAddrAdder(
 
 branchTest ID_branchTest(
 	.opcode(ID_opcode),
-	.Da(ID_Rrs),
-	.Db(ID_Rrt),
+	.Da(ID_forwardedRrs),
+	.Db(ID_forwardedRrt),
 	.initialBranchAddress(ID_initialBranchAddr),
 	.branchAddress(ID_branchAddr)
 );
 
+wire ID_isJR;
+and ID_isJRAnd(ID_isJR, ~ID_opcode[5], ~ID_opcode[4], ~ID_opcode[3], ~ID_opcode[2], ~ID_opcode[1], ~ID_opcode[0], ID_funct[3], ~ID_funct[1]);
 mux #(32) ID_branchOrJRMux(
 	.input0(ID_branchAddr),
-	.input1(ID_JRAddr),
+	.input1(ID_forwardedRrs),
 	.out(ID_JRorBranchAddr),
-	.sel(ID_opcode[2]) //only high with a bne or beq
+	.sel(ID_isJR) //only high with a bne or beq
 );
 
 /****************************************************************************
@@ -284,8 +296,11 @@ end
 *******************************************************************/
 
 wire[4:0] MEM_rt;
+wire[5:0] MEM_opcode, MEM_funct;
 wire MEM_memWr, MEM_LW;
 assign MEM_rt = MEM_instr[20:16];
+assign MEM_opcode = MEM_instr[31:26];
+assign MEM_funct = MEM_instr[5:0];
 
 and MEM_memWrAnd(MEM_memWr, MEM_instr[5], MEM_instr[3], MEM_instr[1], MEM_instr[0]);
 and MEM_LWAnd(MEM_LW, MEM_instr[5], ~MEM_instr[3], MEM_instr[1], MEM_instr[0]);
@@ -307,6 +322,13 @@ mux #(32) MEM_regDataMux(
 	.input1(MEM_dataOut),
 	.sel(MEM_LW),
 	.out(MEM_finalRegDat)
+);
+
+
+regWrLUT MEM_regWrLUT(
+	.opcode(MEM_opcode),
+	.funct(MEM_funct),
+	.regwr(MEM_regWr)
 );
 
 /*****************************************************************************

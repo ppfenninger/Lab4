@@ -24,7 +24,7 @@ module noOp(
 	output reg IF_PreNoOp
 );
 
-reg isJR;
+reg needsPreNoOp;
 reg isOtherBranch;
 wire[31:0] noOPInstr;
 reg[5:0] opcode;
@@ -36,28 +36,28 @@ always @(initiaInstruction or ID_NoOp or ID_PreNoOp) begin
 	opcode = initiaInstruction[31:26];
 	funct = initiaInstruction[5:0];
 	case (opcode)
-		`LW_OP:   begin isJR=0; isOtherBranch=1; end
-		`SW_OP:   begin isJR=0; isOtherBranch=0; end //SW
-		`J_OP:    begin isJR=0; isOtherBranch=0; end //J
-		`JAL_OP:  begin isJR=0; isOtherBranch=0; end //JAL
-		`BEQ_OP:  begin isJR=0; isOtherBranch=1; end //BEQ
-		`BNE_OP:  begin isJR=0; isOtherBranch=1; end//BNE
-		`XORI_OP: begin isJR=0; isOtherBranch=0; end //XORI
-		`ADDI_OP: begin isJR=0; isOtherBranch=0; end //ADDI
+		`LW_OP:   begin needsPreNoOp=0; isOtherBranch=1; end
+		`SW_OP:   begin needsPreNoOp=0; isOtherBranch=0; end //SW
+		`J_OP:    begin needsPreNoOp=0; isOtherBranch=0; end //J
+		`JAL_OP:  begin needsPreNoOp=0; isOtherBranch=0; end //JAL
+		`BEQ_OP:  begin needsPreNoOp=1; isOtherBranch=0; end //BEQ
+		`BNE_OP:  begin needsPreNoOp=1; isOtherBranch=0; end//BNE
+		`XORI_OP: begin needsPreNoOp=0; isOtherBranch=0; end //XORI
+		`ADDI_OP: begin needsPreNoOp=0; isOtherBranch=0; end //ADDI
 
 		`RTYPE_OP: begin
 			case (funct)
-				`JR_FUNCT:  begin isJR=1; isOtherBranch=0; end //JR
-				`ADD_FUNCT: begin isJR=0; isOtherBranch=0; end //ADD
-				`SUB_FUNCT: begin isJR=0; isOtherBranch=0; end //SUB //actually is subtract
-				`SLT_FUNCT: begin isJR=0; isOtherBranch=0; end//SLT //actually is subtract
+				`JR_FUNCT:  begin needsPreNoOp=1; isOtherBranch=0; end //JR
+				`ADD_FUNCT: begin needsPreNoOp=0; isOtherBranch=0; end //ADD
+				`SUB_FUNCT: begin needsPreNoOp=0; isOtherBranch=0; end //SUB //actually is subtract
+				`SLT_FUNCT: begin needsPreNoOp=0; isOtherBranch=0; end//SLT //actually is subtract
 				default: $display("Error in No-Op: Invalid funct");
 			endcase
 		end
 		default: $display("Error in No-Op: Invalid opcode. OPCODE: %b", opcode);
 	endcase
 
-	if(isJR && !ID_PreNoOp && !ID_NoOp) begin instr = noOPInstr; IF_PreNoOp = 1; IF_NoOp = 0; end
+	if(needsPreNoOp && !ID_PreNoOp && !ID_NoOp) begin instr = noOPInstr; IF_PreNoOp = 1; IF_NoOp = 0; end
 	else if(ID_PreNoOp) begin instr = initiaInstruction; IF_PreNoOp = 0; IF_NoOp = 1; end
 	else if(ID_NoOp) begin instr = noOPInstr; IF_PreNoOp = 0; IF_NoOp = 0; end
 	else if(isOtherBranch) begin instr = initiaInstruction; IF_PreNoOp = 0; IF_NoOp = 1; end
