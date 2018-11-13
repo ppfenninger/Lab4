@@ -8,15 +8,16 @@
 `include "regWrLUT.v"
 `include "jumpTest.v"
 `include "forwarding.v"
+`define NOP 32'b00100000000000000000000000000000
 
 module CPU (
 	input clk,
 	input reset
 );
 
-/************************
-*** INSTRUCTION FETCH ***
-************************/
+/******************************************************************************
+****************************** INSTRUCTION FETCH ******************************
+******************************************************************************/
 
 // Program counter and reset
 reg[31:0] IF_programCounter;
@@ -30,7 +31,7 @@ end
 wire[31:0] IF_PCplusFour;
 Adder IF_PCAdder(
 	.operandA(IF_programCounter),
-	.operandB(32'd1),
+	.operandB(32'd4),
 	.result(IF_PCplusFour),
 	.carryout(),
 	.overflow()
@@ -88,21 +89,28 @@ noOp IF_noOpModule(
 	.IF_PreNoOp(IF_preNoOp)
 );
 
-/**********************
-*** IF/ID REGISTERS ***
-**********************/
+/****************************************************************************
+****************************** IF/ID REGISTERS ******************************
+****************************************************************************/
 
 reg[31:0] ID_PCplusFour, ID_instr;
 always @(posedge clk) begin
-	ID_noOp <= IF_noOp;
-	ID_preNoOp <= IF_preNoOp;
-	ID_PCplusFour <= IF_PCplusFour;
-	ID_instr <= IF_instr;
+	if (reset) ID_noOp <= 1'b0;
+	else ID_noOp <= IF_noOp;
+
+	if (reset) ID_preNoOp <= 1'b0;
+	else ID_preNoOp <= IF_preNoOp;
+
+	if (reset) ID_PCplusFour <= 32'b0;
+	else ID_PCplusFour <= IF_PCplusFour;
+
+	if (reset) ID_instr <= `NOP;
+	else ID_instr <= IF_instr;
 end
 
-/*************************
-*** INSTRUCTION DECODE ***
-*************************/
+/*******************************************************************************
+****************************** INSTRUCTION DECODE ******************************
+*******************************************************************************/
 
 wire[4:0] ID_rs, ID_rt;
 wire[5:0] ID_opcode, ID_funct;
@@ -135,7 +143,6 @@ Adder ID_branchAddrAdder(
 
 branchTest ID_branchTest(
 	.opcode(ID_opcode),
-	.funct(ID_funct),
 	.Da(ID_Rrs),
 	.Db(ID_Rrt),
 	.initialBranchAddress(ID_initialBranchAddr),
@@ -143,27 +150,34 @@ branchTest ID_branchTest(
 );
 
 mux #(32) ID_branchOrJRMux(
-	.input1(ID_branchAddr),
-	.input0(ID_JRAddr),
+	.input0(ID_branchAddr),
+	.input1(ID_JRAddr),
 	.out(ID_JRorBranchAddr),
 	.sel(ID_opcode[2]) //only high with a bne or beq
 );
 
-/**********************
-*** ID/EX REGISTERS ***
-**********************/
+/****************************************************************************
+****************************** ID/EX REGISTERS ******************************
+****************************************************************************/
 
 reg[31:0] EX_PCplusFour, EX_instr, EX_Rrs, EX_Rrt;
 always @(posedge clk) begin
-	EX_PCplusFour <= ID_PCplusFour;
-	EX_instr <= ID_instr;
-	EX_Rrs <= ID_Rrs;
-	EX_Rrt <= ID_Rrt;
+	if (reset) EX_PCplusFour <= 32'b0;
+	else EX_PCplusFour <= ID_PCplusFour;
+	
+	if (reset) EX_instr <= `NOP;
+	else EX_instr <= ID_instr;
+
+	if (reset) EX_Rrs <= 32'b0;
+	else EX_Rrs <= ID_Rrs;
+
+	if (reset) EX_Rrt <= 32'b0;
+	else EX_Rrt <= ID_Rrt;
 end
 
-/**************
-*** EXECUTE ***
-**************/
+/********************************************************************
+****************************** EXECUTE ******************************
+********************************************************************/
 
 wire[4:0] EX_rs, EX_rt, EX_rd;
 wire[31:0] EX_SEImm;
@@ -246,20 +260,29 @@ mux #(5) EX_regAddrMux(
 	.out(EX_regAddr)
 );
 
-/***********************
-*** EX/MEM REGISTERS ***
-***********************/
+/*****************************************************************************
+****************************** EX/MEM REGISTERS ******************************
+*****************************************************************************/
+
 reg[31:0] MEM_instr, MEM_Rrt; //MEM_regDat and MEM_regAddr created earlier
 always @(posedge clk) begin
-	MEM_instr <= EX_instr;
-	MEM_Rrt <= EX_Rrt;
-	MEM_regDat <= EX_regDat;
-	MEM_regAddr <= EX_regAddr;
+	if (reset) MEM_instr <= `NOP;
+	else MEM_instr <= EX_instr;
+
+	if (reset) MEM_Rrt <= 32'b0;
+	else MEM_Rrt <= EX_Rrt;
+
+	if (reset) MEM_regDat <= 32'b0;
+	else MEM_regDat <= EX_regDat;
+
+	if (reset) MEM_regAddr <= 5'b0;
+	else MEM_regAddr <= EX_regAddr;
 end 
 
-/*************
-*** MEMORY ***
-*************/
+/*******************************************************************
+****************************** MEMORY ******************************
+*******************************************************************/
+
 wire[4:0] MEM_rt;
 wire MEM_memWr, MEM_LW;
 assign MEM_rt = MEM_instr[20:16];
@@ -286,19 +309,26 @@ mux #(32) MEM_regDataMux(
 	.out(MEM_finalRegDat)
 );
 
-/***********************
-*** MEM/WB REGISTERS ***
-***********************/
+/*****************************************************************************
+****************************** MEM/WB REGISTERS ******************************
+*****************************************************************************/
+
 reg[31:0] WB_instr; //WB_regDat and WB_regAddr created earlier
 always @(posedge clk) begin
-	WB_instr <= MEM_instr;
-	WB_regDat <= MEM_finalRegDat;
-	WB_regAddr <= MEM_regAddr;
+	if (reset) WB_instr <= `NOP;
+	else WB_instr <= MEM_instr;
+
+	if (reset) WB_regDat <= 32'b0;
+	else WB_regDat <= MEM_finalRegDat;
+
+	if (reset) WB_regAddr <= 5'b0;
+	else WB_regAddr <= MEM_regAddr;
 end // always @(posedge clk)
 
-/*****************
-*** WRITE BACK ***
-*****************/
+/***********************************************************************
+****************************** WRITE BACK ******************************
+***********************************************************************/
+
 wire[5:0] WB_opcode, WB_funct;
 wire WB_regWr;
 assign WB_opcode = WB_instr[31:26];
@@ -310,9 +340,9 @@ regWrLUT WB_regWrLUT(
 	.regwr(WB_regWr)
 );
 
-/***************************
-*** UNIVERSAL COMPONENTS ***
-***************************/
+/*********************************************************************************
+****************************** UNIVERSAL COMPONENTS ******************************
+*********************************************************************************/
 
 regfile register(
 	.ReadData1(ID_Rrs),

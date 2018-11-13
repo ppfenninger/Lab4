@@ -40,7 +40,7 @@ always @(instruction) begin
 		default: $display("Error in jump test: Invalid opcode. OPCODE: %b", opcode);
 	endcase
 
-	jumpAddress = {programCounter[31:26], instruction[25:0]};
+	jumpAddress = {programCounter[29:26], instruction[25:0],2'b00};
 end
 
 endmodule

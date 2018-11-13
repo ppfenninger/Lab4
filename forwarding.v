@@ -9,7 +9,7 @@ module forwarding (
 	output reg[31:0] data
 );
 
-always @(targetData or targetReg) begin
+always @(targetData or targetReg or MEM_reg or MEM_data or WB_reg or WB_data) begin
 	case(targetReg)
 		MEM_reg: data=MEM_data;
 		WB_reg: data=WB_data;
