@@ -122,13 +122,16 @@ assign ID_funct  = ID_instr[5:0];
 wire[31:0] ID_Rrs, ID_Rrt, ID_forwardedRrt, ID_forwardedRrs;
 reg[4:0] MEM_regAddr, WB_regAddr;
 reg[31:0] MEM_regDat, WB_regDat;
+wire WB_regWr, MEM_regWr;
 forwarding ID_RrsForwarding(
 	.targetReg(ID_rs),
 	.targetData(ID_Rrs),
 	.MEM_reg(MEM_regAddr),
 	.MEM_data(MEM_regDat),
+	.MEM_regWr(MEM_regWr),
 	.WB_reg(WB_regAddr),
 	.WB_data(WB_regDat),
+	.WB_regWr(WB_regWr),
 	.data(ID_forwardedRrs)
 );
 
@@ -137,8 +140,10 @@ forwarding ID_RrtForwarding(
 	.targetData(ID_Rrt),
 	.MEM_reg(MEM_regAddr),
 	.MEM_data(MEM_regDat),
+	.MEM_regWr(MEM_regWr),
 	.WB_reg(WB_regAddr),
 	.WB_data(WB_regDat),
+	.WB_regWr(WB_regWr),
 	.data(ID_forwardedRrt)
 );
 
@@ -207,8 +212,10 @@ forwarding EX_rs_forwarding(
 	.targetData(EX_Rrs),
 	.MEM_reg(MEM_regAddr),
 	.MEM_data(MEM_regDat),
+	.MEM_regWr(MEM_regWr),
 	.WB_reg(WB_regAddr),
 	.WB_data(WB_regDat),
+	.WB_regWr(WB_regWr),
 	.data(EX_forwardedRrs)
 );
 
@@ -217,8 +224,10 @@ forwarding EX_rt_forwarding(
 	.targetData(EX_Rrt),
 	.MEM_reg(MEM_regAddr),
 	.MEM_data(MEM_regDat),
+	.MEM_regWr(MEM_regWr),
 	.WB_reg(WB_regAddr),
 	.WB_data(WB_regDat),
+	.WB_regWr(WB_regWr),
 	.data(EX_forwardedRrt)
 );
 
@@ -282,7 +291,7 @@ always @(posedge clk) begin
 	else MEM_instr <= EX_instr;
 
 	if (reset) MEM_Rrt <= 32'b0;
-	else MEM_Rrt <= EX_Rrt;
+	else MEM_Rrt <= EX_forwardedRrt;
 
 	if (reset) MEM_regDat <= 32'b0;
 	else MEM_regDat <= EX_regDat;
@@ -302,8 +311,8 @@ assign MEM_rt = MEM_instr[20:16];
 assign MEM_opcode = MEM_instr[31:26];
 assign MEM_funct = MEM_instr[5:0];
 
-and MEM_memWrAnd(MEM_memWr, MEM_instr[5], MEM_instr[3], MEM_instr[1], MEM_instr[0]);
-and MEM_LWAnd(MEM_LW, MEM_instr[5], ~MEM_instr[3], MEM_instr[1], MEM_instr[0]);
+and MEM_memWrAnd(MEM_memWr, MEM_opcode[5], MEM_opcode[3], MEM_opcode[1], MEM_opcode[0]);
+and MEM_LWAnd(MEM_LW, MEM_opcode[5], ~MEM_opcode[3], MEM_opcode[1], MEM_opcode[0]);
 
 wire[31:0] MEM_forwardedRrt; 
 forwarding MEM_rt_forwarding(
@@ -311,8 +320,10 @@ forwarding MEM_rt_forwarding(
 	.targetData(MEM_Rrt),
 	.MEM_reg(MEM_regAddr),
 	.MEM_data(MEM_regDat),
+	.MEM_regWr(MEM_regWr),
 	.WB_reg(WB_regAddr),
 	.WB_data(WB_regDat),
+	.WB_regWr(WB_regWr),
 	.data(MEM_forwardedRrt)
 );
 
@@ -352,7 +363,6 @@ end // always @(posedge clk)
 ***********************************************************************/
 
 wire[5:0] WB_opcode, WB_funct;
-wire WB_regWr;
 assign WB_opcode = WB_instr[31:26];
 assign WB_funct  = WB_instr[5:0];
 

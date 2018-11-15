@@ -76,7 +76,7 @@ module cpu_test ();
 	// End execution after some time delay - adjust to match your program
 	// or use a smarter approach like looking for an exit syscall or the
 	// PC to be the value of the last instruction in your program.
-	#50000 
+	#500000 
 	// if(cpu.register.mux1.input2==32'h3a)
 	// 	$display("Fib Test Successful"); 
 	$finish();
