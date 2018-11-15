@@ -16,7 +16,7 @@ module jumpTestTest ();
 		//is jump
 		instruction=32'b00001011111111111111111111111110; #100
 		if (doesJump !== 1) $display("Test 1a failed");
-		if (jumpAddress !== 32'b10111111111111111111111111111110) $display("Test 1b failed - %b", jumpAddress);
+		if (jumpAddress !== 32'b11111111111111111111111111111000) $display("Test 1b failed - %b", jumpAddress);
 
 		//is not jump
 		instruction=32'b00100011111111111111111111111110; #100
