@@ -59,7 +59,7 @@ module hw4testbenchharness();
   end
 
   // Display test results ('dutpassed' signal) once 'endtest' goes high
-  always @(posedge endtest) begin
+  always @(negedge endtest) begin
     $display("Regfile tests passed?: %b", dutpassed);
     $display();
   end
@@ -103,11 +103,11 @@ output reg		Clk
     ReadRegister2=5'd0;
     WriteRegister=5'd0;
     RegWrite=0;
-    Clk=0;
+    Clk=1;
   end
 
   // Once 'begintest' is asserted, start running test cases
-  always @(posedge begintest) begin
+  always @(negedge begintest) begin
     endtest = 0;
     dutpassed = 1;
     #10
@@ -119,12 +119,12 @@ output reg		Clk
   RegWrite = 1;
   ReadRegister1 = 5'd2;
   ReadRegister2 = 5'd2;
-  #5 Clk=1; #5 Clk=0;	// Generate single clock pulse
+  #5 Clk=0; #5 Clk=1;	// Generate single clock pulse
 
   // Verify expectations and report test result
   if((ReadData1 !== 42) || (ReadData2 !== 42)) begin
     dutpassed = 0;	// Set to 'false' on failure
-    $display("Regfile Test Case 1 Failed: Didn't write value and read back");
+    $display("Regfile Test Case 1 Failed: Didn't write value and read back - %d %d", ReadData1, ReadData2);
   end
 
   // Test Case 2: 
@@ -134,7 +134,7 @@ output reg		Clk
   RegWrite = 1;
   ReadRegister1 = 5'd2;
   ReadRegister2 = 5'd2;
-  #5 Clk=1; #5 Clk=0;
+  #5 Clk=0; #5 Clk=1;
 
   if((ReadData1 !== 15) || (ReadData2 !== 15)) begin
     dutpassed = 0;
@@ -150,10 +150,10 @@ output reg		Clk
   RegWrite = 1;
   ReadRegister1 = 5'd12;
   ReadRegister2 = 5'd12;
-  #5 Clk=1; #5 Clk=0;
+  #5 Clk=0; #5 Clk=1;
   RegWrite = 0;
   WriteData = 32'd12;
-  #5 Clk=1; #5 Clk=0;
+  #5 Clk=0; #5 Clk=1;
 
   if((ReadData1 !== 42) || (ReadData2 !== 42)) begin
     dutpassed = 0;
@@ -171,10 +171,10 @@ output reg		Clk
   RegWrite=1;
   ReadRegister1 = 5'd12;
   ReadRegister2 = 5'd11;
-  #5 Clk=1; #5 Clk=0;
+  #5 Clk=0; #5 Clk=1;
   WriteData = 32'd40;
   WriteRegister = 5'd11;
-  #5 Clk=1; #5 Clk=0;
+  #5 Clk=0; #5 Clk=1;
 
   if((ReadData1 !== 42) || (ReadData2 !== 40)) begin
     dutpassed = 0;
@@ -189,7 +189,7 @@ output reg		Clk
   RegWrite=1;
   ReadRegister1 = 5'd0;
   ReadRegister2 = 5'd0;
-  #5 Clk=1; #5 Clk=0;
+  #5 Clk=0; #5 Clk=1;
 
   if((ReadData1 !== 0) || (ReadData2 !== 0)) begin
     dutpassed = 0;
@@ -205,7 +205,7 @@ output reg		Clk
   RegWrite=1;
   ReadRegister1 = 5'd12;
   ReadRegister2 = 5'd12;
-  #5 Clk=1; #5 Clk=0;
+  #5 Clk=0; #5 Clk=1;
 
   if((ReadData1 !== 42) || (ReadData2 !== 42)) begin
     dutpassed = 0;

@@ -3,7 +3,7 @@
 
 module testmemReg ();
 	reg clk;
-	reg[6:0] addressRW, addressRead, addressWrite;
+	reg[11:0] addressRW, addressRead, addressWrite;
 	reg[31:0] dataInRW, dataInWrite;
 	reg writeEnableRW, writeEnableWrite;
 	wire[31:0] dataOutRW, dataOutRead;
@@ -22,7 +22,7 @@ module testmemReg ();
 	initial begin
 	$display("Starting memReg tests.");
 
-	$display("Writing to two memory addresses");
+	// $display("Writing to two memory addresses");
 	writeEnableWrite = 0;
 	addressRead = 9'b0000000;
 	dataInWrite = 31'b0;
@@ -37,14 +37,14 @@ module testmemReg ();
 	clk=0; #10
 	clk=1; #10 //addressRW 0000000 should now be written to
 
-	$display("Reading from the two memory addresses"); //should not depend on the clock
+	// $display("Reading from the two memory addresses"); //should not depend on the clock
 	writeEnableRW=0;
 	addressRW=9'b1111111; #10
-	if (dataOutRW !== 32'b11110000) $display("Read test 1 failed - %b", dataOutRW);
+	if (dataOutRW !== 32'b11110000) $display("Read test 1a failed - %b", dataOutRW);
 	addressRW=9'b0000000; #10
-	if (dataOutRW !== 32'b00001111) $display("Read test 2 failed - %b", dataOutRW);
+	if (dataOutRW !== 32'b00001111) $display("Read test 2a failed - %b", dataOutRW);
 
-	$display("Writing to two memory addressRWes - with write disabled");
+	// $display("Writing to two memory addressRWes - with write disabled");
 	writeEnableRW=0;
 	addressRW=9'b1111111;
 	dataInRW=32'b00001111;
@@ -55,15 +55,15 @@ module testmemReg ();
 	clk=0; #10
 	clk=1; #10 //addressRW 0000000 should now be written to
 
-	$display("Reading from the two memory addressRWes - make sure they didn't change"); //should not depend on the clock
+	// $display("Reading from the two memory addressRWes - make sure they didn't change"); //should not depend on the clock
 	writeEnableRW=0;
 	addressRW=9'b1111111; #10
-	if (dataOutRW !== 32'b11110000) $display("Read test 1 failed - %b", dataOutRW);
+	if (dataOutRW !== 32'b11110000) $display("Read test 1b failed - %b", dataOutRW);
 	addressRW=9'b0000000; #10
-	if (dataOutRW !== 32'b00001111) $display("Read test 2 failed - %b", dataOutRW);
+	if (dataOutRW !== 32'b00001111) $display("Read test 2b failed - %b", dataOutRW);
 
 
-	$display("Writing to two memory addresses at the same time");
+	// $display("Writing to two memory addresses at the same time");
 	writeEnableRW = 1;
 	writeEnableWrite = 1;
 	dataInRW = 32'b1;
@@ -73,7 +73,7 @@ module testmemReg ();
 	clk = 0; #10
 	clk = 1; #10 //register should now be written to
 
-	$display("Reading from two memory addresses at the same time");
+	// $display("Reading from two memory addresses at the same time");
 	writeEnableRW = 0;
 	writeEnableWrite = 0;
 	addressRW = 9'b0011111;
